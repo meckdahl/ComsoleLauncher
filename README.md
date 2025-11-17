@@ -3,6 +3,7 @@
 **Simple GUI for managing and running Comsol Multiphysics simulations with Python**
 
 ![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)
+![License](https://img.shields.io/badge/License-MIT-green.svg)
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Mac%20%7C%20Linux-lightgrey.svg)
 
 ---
@@ -274,7 +275,7 @@ Each module is ~100-400 lines for easy maintenance.
 A: Only for running simulations. "Inspect & Edit" works without Comsol!
 
 **Q: Can I edit .mph files without the GUI?**
-A: Yes!
+A: Yes! .mph files are ZIP archives. See `examples/` for code samples.
 
 **Q: Does this work on remote servers?**
 A: Yes! Use the launcher scripts or run in headless mode.
@@ -285,6 +286,29 @@ A: Yes! Generate launchers, then schedule with cron/Task Scheduler.
 **Q: What versions of Comsol are supported?**
 A: Any version supported by the mph Python library (6.0+).
 
+---
+
+## Contributing
+
+Contributions welcome! This project follows:
+- PEP 8 style guide
+- Type hints throughout
+- Comprehensive docstrings
+- Modular architecture
+
+---
+
+## License
+
+MIT License - See LICENSE file for details
+
+---
+
+## Support
+
+- **Issues:** Report bugs on GitHub Issues
+- **Questions:** Check FAQ above
+- **Examples:** See `examples/` folder for code samples
 
 ---
 
@@ -295,6 +319,6 @@ Built with:
 - mph library for Comsol integration
 - UV for fast package management (optional)
 
---- Mark Eckdahl
+---
 
-**Made with ❤️ for scientists and engineers **
+**Made with ❤️ for scientists and engineers using Comsol Multiphysics**

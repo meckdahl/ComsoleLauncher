@@ -1,130 +1,221 @@
 #!/bin/bash
-# Comsol Project Manager - Unix/Mac Launcher
-# Easy launch script with automatic UV setup
 
-echo "============================================================"
-echo "  Comsol Project Manager - Starting..."
-echo "============================================================"
+# ============================================================================
+# Console Launcher - Mac/Linux Launcher Script
+# Handles UV installation detection and graceful fallback to pip
+# ============================================================================
+
+set -e  # Exit on error (but we'll handle errors explicitly)
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Helper functions
+print_header() {
+    echo ""
+    echo "========================================"
+    echo "  $1"
+    echo "========================================"
+    echo ""
+}
+
+print_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+print_warning() {
+    echo -e "${YELLOW}[WARN]${NC} $1"
+}
+
+print_success() {
+    echo -e "${GREEN}[OK]${NC} $1"
+}
+
+print_info() {
+    echo -e "${BLUE}[INFO]${NC} $1"
+}
+
+# Main script
+print_header "Console Launcher - Setup"
+
+# Check if Python is available
+if ! command -v python3 &> /dev/null; then
+    print_error "Python 3 is not installed or not in PATH"
+    echo ""
+    echo "Please install Python 3.8 or higher:"
+    echo "  - macOS: brew install python3"
+    echo "  - Linux: sudo apt-get install python3 python3-pip"
+    echo ""
+    exit 1
+fi
+
+print_success "Python found: $(python3 --version)"
+
+# Check for UV installation
 echo ""
+print_info "Checking for UV package manager..."
 
-# Change to script directory
-cd "$(dirname "$0")"
+USE_UV=0
 
-# Create log file
-LOGFILE="launcher.log"
-echo "[$(date)] Comsol Project Manager Starting..." > "$LOGFILE"
-echo "[$(date)] Working directory: $(pwd)" >> "$LOGFILE"
-
-# Check for UV
 if command -v uv &> /dev/null; then
-    echo "[*] UV detected - using fast dependency management"
-    echo "[$(date)] UV detected" >> "$LOGFILE"
-    echo ""
-
-    # Create venv if needed
-    if [ ! -d ".venv" ]; then
-        echo "[*] Creating UV virtual environment..."
-        echo "[$(date)] Creating UV venv..." >> "$LOGFILE"
-        uv venv 2>> "$LOGFILE"
-        if [ $? -ne 0 ]; then
-            echo "[!] Failed to create virtual environment"
-            echo "[$(date)] ERROR: Failed to create venv" >> "$LOGFILE"
-            echo ""
-            echo "Check launcher.log for details"
-            exit 1
-        fi
-        echo "[+] Virtual environment created"
-        echo "[$(date)] Venv created successfully" >> "$LOGFILE"
-        echo ""
-    fi
-
-    # Install dependencies
-    echo "[*] Installing/updating dependencies..."
-    echo "[$(date)] Installing dependencies..." >> "$LOGFILE"
-    uv pip install mph numpy 2>> "$LOGFILE"
-    if [ $? -ne 0 ]; then
-        echo "[!] Failed to install dependencies"
-        echo "[$(date)] ERROR: Dependency installation failed" >> "$LOGFILE"
-        echo ""
-        echo "Check launcher.log for details"
-        exit 1
-    fi
-    echo "[+] Dependencies ready"
-    echo "[$(date)] Dependencies installed" >> "$LOGFILE"
-    echo ""
-
-    # Run the application
-    echo "[*] Launching Comsol Project Manager..."
-    echo "[$(date)] Launching application..." >> "$LOGFILE"
-    echo ""
-    echo "NOTE: First-time Java/Comsol connection may show warnings - this is normal"
-    echo "      The application will continue loading..."
-    echo ""
-    uv run python comsol_manager.py 2>> "$LOGFILE"
-    APP_EXIT_CODE=$?
-    echo "[$(date)] Application exited with code $APP_EXIT_CODE" >> "$LOGFILE"
-
+    print_success "UV found! Using UV for faster installation."
+    USE_UV=1
 else
-    echo "[*] UV not found - using system Python"
-    echo "[$(date)] UV not found, using system Python" >> "$LOGFILE"
-    echo "[i] Install UV for faster setup: pip install uv"
     echo ""
-
-    # Detect Python command
-    if command -v python3 &> /dev/null; then
-        PYTHON_CMD=python3
-    elif command -v python &> /dev/null; then
-        PYTHON_CMD=python
+    echo "UV is not installed."
+    echo "UV is 10-100x faster than pip for installing packages."
+    echo ""
+    read -p "Would you like to install UV? (Y/N): " -n 1 -r
+    echo ""
+    
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        echo ""
+        print_info "Installing UV..."
+        
+        if python3 -m pip install uv; then
+            # Check if UV is now available
+            if command -v uv &> /dev/null; then
+                print_success "UV installed successfully!"
+                USE_UV=1
+            elif python3 -m uv --version &> /dev/null; then
+                print_success "UV installed successfully!"
+                USE_UV=1
+                # Create alias for this session
+                alias uv='python3 -m uv'
+            else
+                print_warning "UV installation failed. Using pip instead."
+            fi
+        else
+            print_warning "UV installation failed. Using pip instead."
+        fi
     else
-        echo "[!] Python not found"
-        echo "[$(date)] ERROR: Python not found" >> "$LOGFILE"
-        echo "[!] Please install Python 3.8 or higher"
-        exit 1
+        print_info "Using pip instead."
     fi
+fi
 
-    # Check Python version
-    PYTHON_VERSION=$($PYTHON_CMD --version 2>&1 | awk '{print $2}')
-    echo "[*] Using Python $PYTHON_VERSION"
-    echo "[$(date)] Using Python $PYTHON_VERSION" >> "$LOGFILE"
+# Install dependencies
+print_header "Installing Dependencies"
 
-    # Check/install dependencies
-    echo "[*] Checking dependencies..."
-    echo "[$(date)] Checking dependencies..." >> "$LOGFILE"
-    $PYTHON_CMD -c "import mph" 2>/dev/null
-    if [ $? -ne 0 ]; then
-        echo "[*] Installing mph library..."
-        echo "[$(date)] Installing mph..." >> "$LOGFILE"
-        $PYTHON_CMD -m pip install mph numpy 2>> "$LOGFILE"
-        if [ $? -ne 0 ]; then
-            echo "[!] Failed to install dependencies"
-            echo "[$(date)] ERROR: pip install failed" >> "$LOGFILE"
-            echo ""
-            echo "Check launcher.log for details"
+install_with_uv() {
+    print_info "Using UV for fast installation..."
+    echo ""
+    
+    # Check if virtual environment exists
+    if [ ! -d "venv" ]; then
+        print_info "Creating virtual environment with UV..."
+        if uv venv; then
+            print_success "Virtual environment created"
+        else
+            print_error "Failed to create virtual environment with UV"
+            return 1
+        fi
+    fi
+    
+    # Activate virtual environment
+    print_info "Activating virtual environment..."
+    if [ -f "venv/bin/activate" ]; then
+        source venv/bin/activate
+    else
+        print_error "Failed to find activation script"
+        return 1
+    fi
+    
+    # Install packages
+    print_info "Installing packages with UV..."
+    if uv pip install mph numpy; then
+        print_success "Dependencies installed successfully with UV"
+        return 0
+    else
+        print_error "UV package installation failed"
+        return 1
+    fi
+}
+
+install_with_pip() {
+    print_info "Using pip for installation..."
+    echo ""
+    
+    # Upgrade pip first
+    print_info "Upgrading pip..."
+    python3 -m pip install --upgrade pip --quiet
+    
+    # Check if virtual environment exists
+    if [ ! -d "venv" ]; then
+        print_info "Creating virtual environment..."
+        if python3 -m venv venv; then
+            print_success "Virtual environment created"
+        else
+            print_error "Failed to create virtual environment"
             exit 1
         fi
     fi
-    echo "[$(date)] Dependencies ready" >> "$LOGFILE"
+    
+    # Activate virtual environment
+    print_info "Activating virtual environment..."
+    if [ -f "venv/bin/activate" ]; then
+        source venv/bin/activate
+    else
+        print_error "Failed to find activation script"
+        exit 1
+    fi
+    
+    # Install packages
+    print_info "Installing packages with pip..."
+    if pip install mph numpy; then
+        print_success "Dependencies installed successfully with pip"
+        return 0
+    else
+        print_error "Package installation failed"
+        echo ""
+        echo "Please check your internet connection and try again"
+        exit 1
+    fi
+}
 
-    # Run the application
-    echo "[*] Launching Comsol Project Manager..."
-    echo "[$(date)] Launching application..." >> "$LOGFILE"
-    echo ""
-    echo "NOTE: First-time Java/Comsol connection may show warnings - this is normal"
-    echo "      The application will continue loading..."
-    echo ""
-    $PYTHON_CMD comsol_manager.py 2>> "$LOGFILE"
-    APP_EXIT_CODE=$?
-    echo "[$(date)] Application exited with code $APP_EXIT_CODE" >> "$LOGFILE"
+# Try installation based on selected method
+if [ $USE_UV -eq 1 ]; then
+    if ! install_with_uv; then
+        print_warning "Falling back to pip..."
+        install_with_pip
+    fi
+else
+    install_with_pip
 fi
 
-# Check exit status
-if [ $APP_EXIT_CODE -ne 0 ]; then
+# Run the application
+print_header "Starting Console Launcher"
+
+# Check if comsol_manager.py exists
+if [ ! -f "comsol_manager.py" ]; then
+    print_error "comsol_manager.py not found in current directory"
     echo ""
-    echo "[!] Application exited with error code $APP_EXIT_CODE"
-    echo "[!] Check launcher.log for error details"
-    echo ""
-    exit $APP_EXIT_CODE
+    echo "Please run this script from the ComsoleLauncher directory"
+    exit 1
 fi
 
-echo ""
-echo "[*] Application closed normally"
+# Make sure we're in the virtual environment
+if [ -f "venv/bin/activate" ]; then
+    source venv/bin/activate
+fi
+
+# Run the application
+if python3 comsol_manager.py; then
+    echo ""
+    print_success "Application closed successfully"
+else
+    EXIT_CODE=$?
+    echo ""
+    print_error "Application exited with error code: $EXIT_CODE"
+    echo ""
+    echo "Common issues:"
+    echo "  - COMSOL not installed"
+    echo "  - Java not available"
+    echo "  - Missing .mph files in comsol_projects folder"
+    echo ""
+    echo "Try using \"Inspect & Edit\" mode which doesn't require COMSOL"
+    exit $EXIT_CODE
+fi
