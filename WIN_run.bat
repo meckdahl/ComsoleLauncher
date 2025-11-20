@@ -1,179 +1,117 @@
 @echo off
-setlocal enabledelayedexpansion
-
 REM ============================================================================
-REM Console Launcher - Windows Launcher Script
-REM Handles UV installation detection and graceful fallback to pip
+REM ComsoleLauncher - Windows Installer
+REM Requires: Python 3.13, Java JDK
 REM ============================================================================
 
+setlocal
+
+cls
 echo.
-echo ========================================
-echo  Console Launcher - Setup
-echo ========================================
+echo ============================================================================
+echo                   ComsoleLauncher - Setup
+echo ============================================================================
 echo.
 
-REM Check if Python is available
-python --version >nul 2>&1
-if errorlevel 1 (
-    echo [ERROR] Python is not installed or not in PATH
+cd /d "%~dp0"
+
+REM ============================================================================
+REM Check Python 3.13 using py launcher
+REM ============================================================================
+echo [1/4] Checking Python 3.13...
+
+py -3.13 --version >nul 2>&1
+if %ERRORLEVEL% neq 0 (
+    echo [X] Python 3.13 not found!
     echo.
-    echo Please install Python 3.8 or higher from:
-    echo https://www.python.org/downloads/
+    echo Download from: https://www.python.org/downloads/
+    echo Check "Add Python to PATH" during install
     echo.
-    echo Make sure to check "Add Python to PATH" during installation
     pause
     exit /b 1
 )
 
-echo [OK] Python found: 
-python --version
+for /f "tokens=*" %%i in ('py -3.13 --version 2^>^&1') do echo [OK] %%i found
 
-REM Check for UV installation
-echo.
-echo Checking for UV package manager...
-uv --version >nul 2>&1
-if errorlevel 1 (
-    echo UV is not installed.
-    echo UV is 10-100x faster than pip for installing packages.
+REM ============================================================================
+REM Check Java JDK
+REM ============================================================================
+echo [2/4] Checking Java JDK...
+
+java -version >nul 2>&1
+if %ERRORLEVEL% neq 0 (
+    echo [X] Java JDK required!
     echo.
-    set /p INSTALL_UV="Would you like to install UV? (Y/N): "
-    
-    if /i "!INSTALL_UV!"=="Y" (
-        echo.
-        echo Installing UV...
-        python -m pip install uv
-        
-        REM Check if UV installation succeeded
-        uv --version >nul 2>&1
-        if errorlevel 1 (
-            echo UV installation failed. Using pip instead.
-            set USE_PIP=1
-        ) else (
-            echo UV installed successfully!
-            set USE_UV=1
-        )
-    ) else (
-        echo Using pip instead.
-        set USE_PIP=1
-    )
-) else (
-    echo UV found! Using UV for faster installation.
-    set USE_UV=1
-)
-
-REM Install dependencies
-echo.
-echo ========================================
-echo  Installing Dependencies
-echo ========================================
-echo.
-
-if defined USE_UV (
-    echo Using UV for faster installation...
+    echo Download from: https://adoptium.net/
+    echo Install Temurin JDK 17, restart computer, run this again
     echo.
-    
-    REM Check if virtual environment exists
-    if not exist "venv" (
-        echo Creating virtual environment with UV...
-        uv venv
-        if errorlevel 1 (
-            echo [ERROR] Failed to create virtual environment with UV
-            echo Falling back to pip...
-            goto USE_PIP_INSTALL
-        )
-    )
-    
-    REM Activate virtual environment
-    call venv\Scripts\activate.bat
-    if errorlevel 1 (
-        echo [ERROR] Failed to activate virtual environment
-        goto USE_PIP_INSTALL
-    )
-    
-    echo Installing packages with UV...
-    uv pip install mph numpy
-    if errorlevel 1 (
-        echo [ERROR] UV package installation failed
-        echo Falling back to pip...
-        goto USE_PIP_INSTALL
-    )
-    
-    echo [OK] Dependencies installed successfully with UV
-    goto RUN_APP
+    pause
+    exit /b 1
+)
+echo [OK] Java found
+
+REM ============================================================================
+REM Create Python 3.13 virtual environment
+REM ============================================================================
+echo [3/4] Setting up environment...
+
+REM Delete old venv if it exists
+if exist ".venv" (
+    echo Removing old virtual environment...
+    rmdir /s /q .venv
 )
 
-:USE_PIP_INSTALL
-echo Using pip for installation...
-echo.
+REM Create venv with Python 3.13
+echo Creating Python 3.13 virtual environment...
+py -3.13 -m venv .venv
 
-REM Upgrade pip first
-python -m pip install --upgrade pip
-
-REM Check if virtual environment exists
-if not exist "venv" (
-    echo Creating virtual environment...
-    python -m venv venv
-    if errorlevel 1 (
-        echo [ERROR] Failed to create virtual environment
-        pause
-        exit /b 1
-    )
-)
-
-REM Activate virtual environment
-call venv\Scripts\activate.bat
-if errorlevel 1 (
-    echo [ERROR] Failed to activate virtual environment
+if not exist ".venv\Scripts\python.exe" (
+    echo [X] Failed to create virtual environment
     pause
     exit /b 1
 )
 
-echo Installing packages with pip...
-pip install mph numpy
-if errorlevel 1 (
-    echo [ERROR] Package installation failed
-    echo.
-    echo Please check your internet connection and try again
+echo [OK] Python 3.13 environment ready
+
+REM ============================================================================
+REM Install dependencies using venv's pip
+REM ============================================================================
+echo [4/4] Installing dependencies...
+
+.venv\Scripts\python -m pip install --upgrade pip --quiet
+
+echo Installing JPype1 from wheel...
+.venv\Scripts\pip install wheels\jpype1-1.6.0-cp313-cp313-win_amd64.whl
+
+if %ERRORLEVEL% neq 0 (
+    echo [X] JPype1 installation failed
     pause
     exit /b 1
 )
 
-echo [OK] Dependencies installed successfully with pip
+echo Installing MPh and NumPy...
+.venv\Scripts\pip install mph numpy
 
-:RUN_APP
-echo.
-echo ========================================
-echo  Starting Console Launcher
-echo ========================================
-echo.
-
-REM Check if comsol_manager.py exists
-if not exist "comsol_manager.py" (
-    echo [ERROR] comsol_manager.py not found in current directory
-    echo.
-    echo Please run this script from the ComsoleLauncher directory
+if %ERRORLEVEL% neq 0 (
+    echo [X] Installation failed
     pause
     exit /b 1
 )
 
-REM Run the application
-python comsol_manager.py
+echo [OK] All dependencies installed
 
-REM Check if application exited with error
-if errorlevel 1 (
-    echo.
-    echo [ERROR] Application exited with error code: !errorlevel!
-    echo.
-    echo Common issues:
-    echo   - COMSOL not installed
-    echo   - Java not available
-    echo   - Missing .mph files in comsol_projects folder
-    echo.
-    echo Try using "Inspect & Edit" mode which doesn't require COMSOL
-    pause
-    exit /b 1
-)
-
+REM ============================================================================
+REM Done - Launch
+REM ============================================================================
 echo.
-echo Application closed successfully
-pause
+echo ============================================================================
+echo   Setup Complete!
+echo ============================================================================
+echo.
+
+if not exist "comsol_projects" mkdir comsol_projects
+
+echo Starting ComsoleLauncher...
+.venv\Scripts\python.exe launcher.py
+
+endlocal

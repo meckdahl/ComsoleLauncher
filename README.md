@@ -1,26 +1,16 @@
-# Comsol Project Manager
+# ComsoleLauncher
 
-**Simple GUI for managing and running Comsol Multiphysics simulations with Python**
+**Simple GUI for managing and running COMSOL Multiphysics simulations with Python**
 
-![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)
+![Python](https://img.shields.io/badge/Python-3.13-blue.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Mac%20%7C%20Linux-lightgrey.svg)
 
 ---
 
-## What Does It Do?
+## Quick Start (60 Seconds!)
 
-This tool lets you:
-- ✨ Run Comsol simulations with one click
-- 📝 Edit simulation parameters without opening Comsol
-- 🔍 View and modify .mph files directly (no Comsol needed!)
-- 📄 Generate standalone scripts for batch processing
-
----
-
-## Quick Start (3 Steps!)
-
-### 1. Install Requirements
+### 1. Run the Installer
 
 **Windows:**
 ```bash
@@ -32,15 +22,21 @@ WIN_run.bat
 ./MAC_run.sh
 ```
 
-That's it! The launcher installs everything automatically.
+The installer will:
+- Check for Python 3.13 and Java JDK
+- Create a virtual environment
+- Install dependencies (JPype1, MPh, NumPy)
+- Launch the application
 
 ### 2. Add Your Files
 
 Put your `.mph` files in the `comsol_projects` folder.
 
-### 3. Run!
+### 3. Run Simulations
 
-The app opens automatically. Click a project, then click **Quick Run** ▶
+- Click a project card
+- Click **"▶ Quick Run"**
+- Done! Results saved as `yourfile_result.mph`
 
 ---
 
@@ -50,116 +46,58 @@ The app opens automatically. Click a project, then click **Quick Run** ▶
 One-click simulation execution. No configuration needed.
 
 ### 🔧 Advanced Mode
-- Connect to Comsol server
+- Connect to COMSOL server
 - Edit parameters interactively
 - Run simulations with live feedback
 
-### 🔍 Inspect & Edit (No Comsol Required!)
-- View .mph file contents
+### 🔍 Inspect & Edit (No COMSOL Required!)
+- View `.mph` file contents
 - Edit parameters directly
 - Save modified files
-- **Works without mph library or Comsol!**
+- **Works without COMSOL installed!**
 
 ### 📄 Launcher Generator
 Creates standalone scripts for your simulations:
-- `run_simulation.py` - Python script
+- `run.py` - Python script
 - `run.sh` - Mac/Linux script
 - `run.bat` - Windows script
 
 ---
 
-## Installation
+## Requirements
 
-### Option 1: Automatic (Recommended)
+### Required
+- **Python 3.13** - [Download](https://www.python.org/downloads/)
+- **Java JDK 17+** - [Download](https://adoptium.net/)
+- **COMSOL Multiphysics** - (optional, only needed for running simulations)
 
-**Windows:**
+### Dependencies (Auto-installed)
+- JPype1 1.6.0 (Java-Python bridge)
+- MPh 1.2+ (COMSOL Python interface)
+- NumPy 1.20+ (Numerical computing)
+
+---
+
+## Manual Installation
+
+If you prefer manual setup:
+
 ```bash
-WIN_run.bat
-```
+# Create virtual environment
+python3.13 -m venv .venv
 
-**Mac/Linux:**
-```bash
-chmod +x MAC_run.sh
-./MAC_run.sh
-```
+# Activate it
+# Windows:
+.venv\Scripts\activate
+# Mac/Linux:
+source .venv/bin/activate
 
-### Option 2: Manual
-
-```bash
 # Install dependencies
 pip install mph numpy
 
-# Run application
-python comsol_manager.py
+# Run
+python launcher.py
 ```
-
-### Option 3: With UV (10-100x faster!)
-
-```bash
-# Install UV
-pip install uv
-
-# Run with UV
-uv pip install mph numpy
-uv run python comsol_manager.py
-```
-
----
-
-## Requirements
-
-### Minimum (Inspect & Edit only):
-- Python 3.8 or higher
-- tkinter (usually included with Python)
-
-### Full Features:
-- Python 3.8+
-- mph library: `pip install mph`
-- Comsol Multiphysics installed
-- Java Runtime (comes with Comsol)
-
----
-
-## Usage Guide
-
-### Running a Simulation
-
-1. **Start the app**
-   - Windows: Double-click `WIN_run.bat`
-   - Mac/Linux: Run `./MAC_run.sh`
-
-2. **Select a project**
-   - Click on any project card
-
-3. **Click "Quick Run" ▶**
-   - Progress window shows status
-   - Results saved automatically
-
-### Editing Parameters
-
-#### Method 1: Inspect & Edit (No Comsol needed!)
-
-1. Select a project
-2. Click **"🔍 Inspect & Edit"**
-3. Go to **"Parameters"** tab
-4. Double-click any parameter to edit
-5. Click **"💾 Save Changes"**
-
-#### Method 2: Advanced Mode (Requires Comsol)
-
-1. Select a project
-2. Click **"⚙️ Advanced"**
-3. Click **"🔌 Connect"**
-4. Click **"📋 Load Parameters"**
-5. Double-click parameters to edit
-6. Click **"▶ Run"**
-
-### Creating Launcher Scripts
-
-1. Select a project
-2. Click **"📄 Create Launcher"**
-3. Scripts created in project folder
-4. Run anytime without the GUI!
 
 ---
 
@@ -167,134 +105,40 @@ uv run python comsol_manager.py
 
 ```
 ComsoleLauncher/
-├── WIN_run.bat              ← Windows launcher
-├── MAC_run.sh               ← Mac/Linux launcher
-├── comsol_manager.py        ← Main application
-├── comsol_projects/         ← Put your .mph files here
-├── ui/                      ← User interface modules
-├── features/                ← Feature implementations
-├── core/                    ← Core functionality
-└── utils/                   ← Utility functions
+├── WIN_run.bat          # Windows installer
+├── MAC_run.sh           # Mac/Linux installer
+├── launcher.py          # Main launcher (handles setup)
+├── comsol_manager.py    # Application entry point
+├── requirements.txt     # Python dependencies
+├── wheels/              # Pre-built JPype1 wheel for Windows Python 3.13
+│   └── jpype1-1.6.0-cp313-cp313-win_amd64.whl
+├── ui/                  # UI components
+├── core/                # Core functionality
+├── features/            # Feature modules
+├── utils/               # Utility functions
+└── comsol_projects/     # Put your .mph files here
 ```
 
 ---
 
 ## Troubleshooting
 
-### "mph library not found"
+### "Python 3.13 not found"
+- Install Python 3.13 from [python.org](https://www.python.org/downloads/)
+- Make sure to check "Add Python to PATH" during installation
+- Restart your terminal/computer
 
-**Solution:**
-```bash
-pip install mph
-```
-Or use the **"Install mph"** button in the app.
+### "Java JDK not found"
+- Install Temurin JDK 17 from [adoptium.net](https://adoptium.net/)
+- Restart your computer after installation
 
 ### "No .mph files found"
+- Place your `.mph` files in the `comsol_projects` folder
+- Click the **Refresh** button
 
-**Solution:**
-Put your Comsol `.mph` files in the `comsol_projects` folder, then click **↻ Refresh**.
-
-### "Comsol connection failed"
-
-**Solutions:**
-1. Make sure Comsol Multiphysics is installed
-2. Check Java is available: `java -version`
-3. Try restarting the application
-4. Use **"Inspect & Edit"** mode instead (no Comsol needed)
-
-### First run shows warnings
-
-This is normal! Java/Comsol connection may show warnings on first run. The app will still work.
-
----
-
-## Tips & Tricks
-
-### 💡 Tip 1: Use Inspect & Edit for Quick Changes
-No need to open Comsol just to change a parameter value!
-
-### 💡 Tip 2: Generate Launchers for Batch Processing
-Create scripts once, run anywhere - perfect for clusters.
-
-### 💡 Tip 3: Install UV for Speed
-UV is 10-100x faster than pip. Install with `pip install uv`.
-
-### 💡 Tip 4: Organize with Subfolders
-Use folders in `comsol_projects/` to organize by type:
-```
-comsol_projects/
-├── thermal/
-├── structural/
-└── fluid/
-```
-
----
-
-## Example Workflow
-
-### Scenario: Parameter Sweep
-
-1. **Edit base model**
-   - Click "🔍 Inspect & Edit"
-   - Change parameter: `power = 10[W]`
-   - Save as: `model_10W_modified.mph`
-
-2. **Repeat for different values**
-   - Edit: `power = 20[W]`, save as `model_20W_modified.mph`
-   - Edit: `power = 30[W]`, save as `model_30W_modified.mph`
-
-3. **Generate launchers**
-   - Select each model
-   - Click "📄 Create Launcher"
-
-4. **Run batch**
-   ```bash
-   python model_10W/run_simulation.py
-   python model_20W/run_simulation.py
-   python model_30W/run_simulation.py
-   ```
-
----
-
-## Architecture
-
-Modern modular design with separation of concerns:
-
-- **ui/** - User interface components
-- **features/** - Quick Run, Advanced Mode, Inspect & Edit
-- **core/** - Project scanning and management
-- **utils/** - File parsing, dependencies, utilities
-
-Each module is ~100-400 lines for easy maintenance.
-
----
-
-## FAQ
-
-**Q: Do I need Comsol installed?**
-A: Only for running simulations. "Inspect & Edit" works without Comsol!
-
-**Q: Can I edit .mph files without the GUI?**
-A: Yes! .mph files are ZIP archives. See `examples/` for code samples.
-
-**Q: Does this work on remote servers?**
-A: Yes! Use the launcher scripts or run in headless mode.
-
-**Q: Can I automate this?**
-A: Yes! Generate launchers, then schedule with cron/Task Scheduler.
-
-**Q: What versions of Comsol are supported?**
-A: Any version supported by the mph Python library (6.0+).
-
----
-
-## Contributing
-
-Contributions welcome! This project follows:
-- PEP 8 style guide
-- Type hints throughout
-- Comprehensive docstrings
-- Modular architecture
+### "Cannot connect to COMSOL"
+- Use **"Inspect & Edit"** mode instead (doesn't require COMSOL)
+- Make sure COMSOL is installed if you need to run simulations
 
 ---
 
@@ -304,21 +148,12 @@ MIT License - See LICENSE file for details
 
 ---
 
-## Support
-
-- **Issues:** Report bugs on GitHub Issues
-- **Questions:** Check FAQ above
-- **Examples:** See `examples/` folder for code samples
-
----
-
 ## Credits
 
-Built with:
-- Python tkinter for GUI
-- mph library for Comsol integration
-- UV for fast package management (optional)
+- Built with [MPh](https://mph.readthedocs.io/) - COMSOL Python interface
+- Uses [JPype1](https://github.com/jpype-project/jpype) - Java-Python bridge
+- Powered by Python and tkinter
 
 ---
 
-**Made with ❤️ for scientists and engineers using Comsol Multiphysics**
+**Enjoy! 🚀**

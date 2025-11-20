@@ -32,7 +32,7 @@ def check_uv_available():
             text=True
         )
         return result.returncode == 0
-    except FileNotFoundError:
+    except (FileNotFoundError, PermissionError, OSError):
         return False
 
 
@@ -84,24 +84,43 @@ def setup_with_uv():
 
 def setup_with_pip():
     """Setup environment using regular pip"""
-    log("[*] Using system Python...")
+    log("[*] Using pip for dependency management...")
     print("[i] Install UV for faster setup: pip install uv")
 
-    # Check if mph is installed
-    try:
-        import mph
-        log("[+] Dependencies already installed")
-    except ImportError:
-        log("[*] Installing mph library...")
+    venv_path = Path(__file__).parent / ".venv"
+
+    # Create venv if needed
+    if not venv_path.exists():
+        log("[*] Creating virtual environment...")
         result = subprocess.run(
-            [sys.executable, "-m", "pip", "install", "mph", "numpy"],
+            [sys.executable, "-m", "venv", ".venv"],
             capture_output=True,
             text=True
         )
         if result.returncode != 0:
-            log(f"ERROR: pip install failed: {result.stderr}")
-            raise subprocess.CalledProcessError(result.returncode, "pip install")
-        log("[+] Dependencies installed")
+            log(f"ERROR: Failed to create venv: {result.stderr}")
+            raise subprocess.CalledProcessError(result.returncode, "venv creation")
+        log("[+] Virtual environment created")
+
+    # Determine pip path in venv
+    if sys.platform == "win32":
+        venv_python = venv_path / "Scripts" / "python.exe"
+        venv_pip = venv_path / "Scripts" / "pip.exe"
+    else:
+        venv_python = venv_path / "bin" / "python"
+        venv_pip = venv_path / "bin" / "pip"
+
+    # Install dependencies
+    log("[*] Installing dependencies...")
+    result = subprocess.run(
+        [str(venv_pip), "install", "mph", "numpy"],
+        capture_output=True,
+        text=True
+    )
+    if result.returncode != 0:
+        log(f"ERROR: pip install failed: {result.stderr}")
+        raise subprocess.CalledProcessError(result.returncode, "pip install")
+    log("[+] Dependencies installed")
 
     # Run application
     log("[*] Launching Comsol Project Manager...")
@@ -111,7 +130,7 @@ def setup_with_pip():
     print()
 
     result = subprocess.run(
-        [sys.executable, "comsol_manager.py"],
+        [str(venv_python), "comsol_manager.py"],
         capture_output=False  # Let output go to console
     )
     log(f"Application exited with code {result.returncode}")

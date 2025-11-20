@@ -5,6 +5,7 @@ __pycache__/
 
 # Application specific
 launcher.log
+install.log
 *.mph
 *_backup.mph
 *_modified.mph
@@ -26,7 +27,7 @@ lib64/
 parts/
 sdist/
 var/
-wheels/
+# wheels/ - REMOVED: We need to commit our pre-built wheels
 share/python-wheels/
 *.egg-info/
 .installed.cfg

@@ -287,9 +287,24 @@ Directly view and modify .mph parameters.
 
 def main():
     """Main entry point"""
-    root = tk.Tk()
-    app = ComsolProjectManager(root)
-    root.mainloop()
+    try:
+        root = tk.Tk()
+        app = ComsolProjectManager(root)
+        root.mainloop()
+    except Exception as e:
+        import traceback
+        print("\n" + "="*70)
+        print("ERROR: Application failed to start")
+        print("="*70)
+        print(f"\n{type(e).__name__}: {e}\n")
+        print("Full traceback:")
+        print("-"*70)
+        traceback.print_exc()
+        print("-"*70)
+        print("\nPress Enter to exit...")
+        input()
+        import sys
+        sys.exit(1)
 
 
 if __name__ == "__main__":

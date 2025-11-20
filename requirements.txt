@@ -1,18 +1,6 @@
-# Console Launcher - Python Dependencies
-# Install with: pip install -r requirements.txt
-# Or with UV: uv pip install -r requirements.txt
+# ComsoleLauncher Dependencies
+# Auto-installed by WIN_run.bat or MAC_run.sh
 
-# Core dependencies for COMSOL integration
-mph>=1.2.0          # COMSOL Python interface
-numpy>=1.20.0       # Numerical computing
-
-# Optional but recommended for better performance
-uv>=0.1.0           # Fast package manager (10-100x faster than pip)
-
-# GUI dependencies (usually included with Python)
-# tkinter - comes with Python standard library
-
-# Development dependencies (optional)
-# pytest>=7.0.0     # Testing framework
-# black>=22.0.0     # Code formatter
-# ruff>=0.1.0       # Fast linter
+jpype1>=1.5.0
+mph>=1.2.0
+numpy>=1.20.0
